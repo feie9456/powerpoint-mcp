@@ -1,55 +1,48 @@
 import os
-import requests
-
-from PIL import Image
+import base64
 from io import BytesIO
-from together import Together
+from PIL import Image
+from openai import OpenAI
+
 
 class VisionManager:
+    def __init__(self):
+        """Initialize the VisionManager with OpenAI configuration."""
+        self.api_key = os.environ.get("OPENAI_API_KEY")
+        self.base_url = os.environ.get(
+            "OPENAI_API_BASE_URL", "https://api.openai.com/v1"
+        )
+        self.client = OpenAI(api_key=self.api_key, base_url=self.base_url)
+        self.model = os.environ.get("OPENAI_IMAGE_MODEL", "gpt-image-1")
 
     async def generate_and_save_image(self, prompt: str, output_path: str) -> str:
-        """Generate an image using Together AI/Flux Model and save it to the specified path."""
-
-        api_key = os.environ.get('TOGETHER_API_KEY')
-        if not api_key:
-            raise ValueError("TOGETHER_API_KEY environment variable not set.")
-
-        client = Together(api_key=api_key)
-
+        """Generate an image using OpenAI API and save it to the specified path."""
         try:
             # Generate the image
-            response = client.images.generate(
-                prompt=prompt,
-                width=1024,
-                height=1024,
-                steps=4,
-                model="black-forest-labs/FLUX.1-schnell-Free",
-                n=1,
+            response = self.client.images.generate(
+                model=self.model, prompt=prompt, n=1, size="1024x1024"
             )
-        except Exception as e:
-            raise ValueError(f"Failed to generate image: {str(e)}")
 
-        image_url = response.data[0].url
+            if not response.data:
+                raise ValueError("No images generated")
 
-        # Download the image
-        try:
-            response = requests.get(image_url)
-            if response.status_code != 200:
-                raise ValueError(f"Failed to download generated image: HTTP {response.status_code}")
-        except requests.RequestException as e:
-            raise ValueError(f"Network error downloading image: {str(e)}")
+            # Get the image data
+            image_data = response.data[0].b64_json
 
-        # Save the image
-        try:
-            image = Image.open(BytesIO(response.content))
+            # Convert base64 to image
+            image_bytes = base64.b64decode(image_data)
+            image = Image.open(BytesIO(image_bytes))
+
             # Ensure the save directory exists
             try:
                 os.makedirs(os.path.dirname(output_path), exist_ok=True)
             except OSError as e:
-                raise ValueError(f"Failed to create a directory for image: str({e})")
+                raise ValueError(f"Failed to create directory for image: {str(e)}")
+
             # Save the image
             image.save(output_path)
-        except (IOError, OSError) as e:
-            raise ValueError(f"Failed to save image to {output_path}: {str(e)}")
+
+        except Exception as e:
+            raise ValueError(f"Failed to generate or save image: {str(e)}")
 
         return output_path

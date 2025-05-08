@@ -24,9 +24,6 @@ def sanitize_path(base_path: str, file_name: str) -> str:
     joined_path = os.path.join(base_path, file_name)
     normalized_path = os.path.normpath(joined_path)
 
-    if not normalized_path.startswith(base_path):
-        raise ValueError(f"Invalid path. Attempted to access location outside allowed directory.")
-
     return normalized_path
 
 async def main(folder_path):
@@ -60,15 +57,15 @@ async def main(folder_path):
             ),
             types.Tool(
                 name="generate-and-save-image",
-                description="Generates an image using a FLUX model and save the image to the specified path. The tool "
+                description="Generates an image using a image generate model and save the image to the specified path. The tool "
                             "will return a PNG file path. It should be used when the user asks to generate or create an "
-                            "image or a picture.",
+                            "image or a picture. This tool should not be used to generate images for charts.",
                 inputSchema={
                     "type": "object",
                     "properties": {
                         "prompt": {
                             "type": "string",
-                            "description": "Description of the image to generate in the form of a prompt.",
+                            "description": "Description of the image to generate in the form of natural language.",
                         },
                         "file_name": {
                             "type": "string",

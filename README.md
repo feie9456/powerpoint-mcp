@@ -39,26 +39,16 @@ The server implements multiple tools:
 - ```save-presentation```: Saves the presentation to a file.
   - Takes "presentation_name" as required arguments.
   - Saves the presentation to the folder_path. The client must call this tool to finalize the process.
-- ```generate-and-save-image```: Generates an image for the presentation using a FLUX model
+- ```generate-and-save-image```: Generates an image for the presentation using a openai model
   - Takes "prompt" and "file_name" as required string arguments
-  - Creates an image using the free FLUX model on TogetherAI (requires an API key)
 
 ## Configuration
-
-An environment variable is required for image generation via TogetherAI
-Register for an account: https://api.together.xyz/settings/api-keys
-
-```
-"env": {
-        "TOGETHER_API_KEY": "api_key"
-      }
-```
 
 A folder_path is required. All presentations and images will be saved to this folder.
 
 ```
 "--folder-path",
-        "/path/to/decks_folder"
+"/path/to/decks_folder"
 ```
 
 ## Quickstart
@@ -97,7 +87,9 @@ On Windows: `%APPDATA%/Claude/claude_desktop_config.json`
     "powerpoint": {
       "command": "uv",
       "env": {
-        "TOGETHER_API_KEY": "api_key"
+        "OPENAI_API_KEY": "sk-xxxx",
+        "OPENAI_API_BASE_URL": "https://api.openai.com/v1"
+        "OPENAI_IMAGE_MODEL": "gpt-image-1"
       },
       "args": [
         "--directory",
